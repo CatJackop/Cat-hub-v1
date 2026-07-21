@@ -1,0 +1,182 @@
+-- CatHub Script (Full Version)
+-- Tabs: Home, Player, Links + Circle Toggle Button
+
+local player = game.Players.LocalPlayer
+local gui = Instance.new("ScreenGui", player:WaitForChild("PlayerGui"))
+
+-- Main Frame
+local frame = Instance.new("Frame", gui)
+frame.Size = UDim2.new(0, 340, 0, 600)
+frame.Position = UDim2.new(0.5, -170, 0.5, -300)
+frame.BackgroundColor3 = Color3.fromRGB(25,25,25)
+frame.Visible = true
+
+-- Tabs
+local homeTab = Instance.new("TextButton", frame)
+homeTab.Size = UDim2.new(0.33, -5, 0, 30)
+homeTab.Position = UDim2.new(0, 5, 0, 20)
+homeTab.Text = "Home"
+homeTab.BackgroundColor3 = Color3.fromRGB(0,170,255)
+homeTab.TextColor3 = Color3.fromRGB(255,255,255)
+
+local playerTab = Instance.new("TextButton", frame)
+playerTab.Size = UDim2.new(0.33, -5, 0, 30)
+playerTab.Position = UDim2.new(0.33, 0, 0, 20)
+playerTab.Text = "Player"
+playerTab.BackgroundColor3 = Color3.fromRGB(40,40,40)
+playerTab.TextColor3 = Color3.fromRGB(255,255,255)
+
+local linksTab = Instance.new("TextButton", frame)
+linksTab.Size = UDim2.new(0.33, -5, 0, 30)
+linksTab.Position = UDim2.new(0.66, 0, 0, 20)
+linksTab.Text = "Links"
+linksTab.BackgroundColor3 = Color3.fromRGB(40,40,40)
+linksTab.TextColor3 = Color3.fromRGB(255,255,255)
+
+-- Frames for each tab
+local homeFrame = Instance.new("Frame", frame)
+homeFrame.Size = UDim2.new(1, -20, 1, -70)
+homeFrame.Position = UDim2.new(0, 10, 0, 60)
+homeFrame.BackgroundTransparency = 1
+
+local playerFrame = Instance.new("Frame", frame)
+playerFrame.Size = UDim2.new(1, -20, 1, -70)
+playerFrame.Position = UDim2.new(0, 10, 0, 60)
+playerFrame.BackgroundTransparency = 1
+playerFrame.Visible = false
+
+local linksFrame = Instance.new("Frame", frame)
+linksFrame.Size = UDim2.new(1, -20, 1, -70)
+linksFrame.Position = UDim2.new(0, 10, 0, 60)
+linksFrame.BackgroundTransparency = 1
+linksFrame.Visible = false
+
+-- Utility: Toggle
+local function createToggle(parent, name, yPos, callback)
+    local button = Instance.new("TextButton", parent)
+    button.Size = UDim2.new(1, 0, 0, 40)
+    button.Position = UDim2.new(0, 0, 0, yPos)
+    button.BackgroundColor3 = Color3.fromRGB(40,40,40)
+    button.TextColor3 = Color3.fromRGB(255,255,255)
+    button.Font = Enum.Font.Gotham
+    button.Text = name .. ": OFF"
+
+    local state = false
+    button.MouseButton1Click:Connect(function()
+        state = not state
+        button.Text = name .. (state and ": ON" or ": OFF")
+        button.BackgroundColor3 = state and Color3.fromRGB(0,170,255) or Color3.fromRGB(40,40,40)
+        callback(state)
+    end)
+end
+
+-- Utility: Slider
+local function createSlider(parent, name, yPos, minVal, maxVal, defaultVal, callback)
+    local label = Instance.new("TextLabel", parent)
+    label.Position = UDim2.new(0, 0, 0, yPos)
+    label.Size = UDim2.new(1, 0, 0, 20)
+    label.Text = name .. ": " .. defaultVal
+    label.TextColor3 = Color3.fromRGB(255,255,255)
+    label.BackgroundTransparency = 1
+    label.Font = Enum.Font.Gotham
+    label.TextScaled = true
+
+    local sliderFrame = Instance.new("Frame", parent)
+    sliderFrame.Position = UDim2.new(0, 0, 0, yPos+25)
+    sliderFrame.Size = UDim2.new(1, 0, 0, 20)
+    sliderFrame.BackgroundColor3 = Color3.fromRGB(40,40,40)
+
+    local knob = Instance.new("Frame", sliderFrame)
+    knob.Size = UDim2.new((defaultVal-minVal)/(maxVal-minVal), 0, 1, 0)
+    knob.BackgroundColor3 = Color3.fromRGB(0,170,255)
+
+    local dragging = false
+    sliderFrame.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+        end
+    end)
+    sliderFrame.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local relX = math.clamp((input.Position.X - sliderFrame.AbsolutePosition.X)/sliderFrame.AbsoluteSize.X,0,1)
+            knob.Size = UDim2.new(relX,0,1,0)
+            local value = math.floor(minVal + (maxVal-minVal)*relX)
+            label.Text = name .. ": " .. value
+            callback(value)
+        end
+    end)
+end
+
+-- Home tab
+createToggle(homeFrame, "Fast M1", 0, function(state)
+    if state then
+        spawn(function()
+            while state do
+                print("M1 Attack")
+                wait(0.1)
+            end
+        end)
+    end
+end)
+createToggle(homeFrame, "Auto Level Farm", 50, function(state)
+    print("Auto Level Farm", state)
+end)
+
+-- Player tab
+createToggle(playerFrame, "ESP Player", 0, function(state) print("ESP Player", state) end)
+createToggle(playerFrame, "ESP Fruit", 50, function(state) print("ESP Fruit", state) end)
+createSlider(playerFrame, "WalkSpeed", 110, 50, 300, 100, function(value)
+    player.Character.Humanoid.WalkSpeed = value
+end)
+createSlider(playerFrame, "JumpPower", 170, 50, 200, 75, function(value)
+    player.Character.Humanoid.JumpPower = value
+end)
+
+-- Links tab
+local discordLink = Instance.new("TextButton", linksFrame)
+discordLink.Size = UDim2.new(1, 0, 0, 40)
+discordLink.Position = UDim2.new(0, 0, 0, 0)
+discordLink.Text = "Join Discord Server 🔗"
+discordLink.BackgroundColor3 = Color3.fromRGB(40,40,40)
+discordLink.TextColor3 = Color3.fromRGB(255,255,255)
+discordLink.MouseButton1Click:Connect(function()
+    print("Discord link clicked: https://discord.gg/M97jeJp5w")
+end)
+
+local youtubeLink = Instance.new("TextButton", linksFrame)
+youtubeLink.Size = UDim2.new(1, 0, 0, 40)
+youtubeLink.Position = UDim2.new(0, 0, 0, 50)
+youtubeLink.Text = "Visit YouTube Channel ▶️"
+youtubeLink.BackgroundColor3 = Color3.fromRGB(40,40,40)
+youtubeLink.TextColor3 = Color3.fromRGB(255,255,255)
+youtubeLink.MouseButton1Click:Connect(function()
+    print("YouTube link clicked: https://youtube.com/YourChannelName")
+end)
+
+-- Tab switching
+homeTab.MouseButton1Click:Connect(function()
+    homeFrame.Visible = true
+    playerFrame.Visible = false
+    linksFrame.Visible = false
+    homeTab.BackgroundColor3 = Color3.fromRGB(0,170,255)
+    playerTab.BackgroundColor3 = Color3.fromRGB(40,40,40)
+    linksTab.BackgroundColor3 = Color3.fromRGB(40,40,40)
+end)
+playerTab.MouseButton1Click:Connect(function()
+    homeFrame.Visible = false
+    playerFrame.Visible = true
+    linksFrame.Visible = false
+    playerTab.BackgroundColor3 = Color3.fromRGB(0,170,255)
+    homeTab.BackgroundColor3 = Color3.fromRGB(40,40,40)
+    linksTab.BackgroundColor3 = Color3.fromRGB(40,40,40)
+end)
+linksTab.MouseButton1Click:Connect(function()
+    homeFrame.Visible = false
+    playerFrame.Visible = false
+    linksFrame.Visible = true
+    links
